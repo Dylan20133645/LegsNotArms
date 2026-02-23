@@ -1,4 +1,8 @@
 ﻿using BepInEx;
+using ExitGames.Client.Photon;
+using HarmonyLib;
+using LegsNotArms.Patches;
+using Photon.Pun;
 using UnityEngine;
 
 namespace LegsNotArms;
@@ -6,70 +10,70 @@ namespace LegsNotArms;
 [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
 public class Plugin : BaseUnityPlugin
 {
-    private readonly float      defaultYPosition = 0.3432f;
-    private          GameObject leftShoulder;
-    private readonly float      legsYPosition = 0.0432f;
-    private          GameObject rightShoulder;
-    private          void       Start() => GorillaTagger.OnPlayerSpawned(OnPlayerSpawned);
+    private const float DefaultYPosition = 0.3432f;
+    private const float LegsYPosition    = 0.0432f;
+
+    private void Start()
+    {
+        GorillaTagger.OnPlayerSpawned(OnPlayerSpawned);
+
+        PhotonNetwork.SetPlayerCustomProperties(new Hashtable { { Constants.Name, Constants.Version }, });
+
+        Harmony harmony = new(Constants.GUID);
+        harmony.PatchAll();
+
+        RigSpawnedPatch.OnRigSpawned += rig =>
+                                        {
+                                            if (!rig.creator.GetPlayerRef().CustomProperties
+                                                    .ContainsKey(Constants.Name))
+                                                return;
+
+                                            Transform left  = GetShoulderTransform(rig, true);
+                                            Transform right = GetShoulderTransform(rig, false);
+
+                                            Vector3 lPos = left.localPosition;
+                                            Vector3 rPos = right.localPosition;
+
+                                            lPos.y = LegsYPosition;
+                                            rPos.y = LegsYPosition;
+
+                                            left.localPosition  = lPos;
+                                            right.localPosition = rPos;
+                                        };
+
+        RigCachedPatch.OnRigCached += rig =>
+                                      {
+                                          Transform left  = GetShoulderTransform(rig, true);
+                                          Transform right = GetShoulderTransform(rig, false);
+
+                                          Vector3 lPos = left.localPosition;
+                                          Vector3 rPos = right.localPosition;
+
+                                          lPos.y = DefaultYPosition;
+                                          rPos.y = DefaultYPosition;
+
+                                          left.localPosition  = lPos;
+                                          right.localPosition = rPos;
+                                      };
+    }
+
+    private Transform GetShoulderTransform(VRRig rig, bool isLeft) =>
+            isLeft ? rig.leftHand.rigTarget.transform.parent.parent : rig.rightHand.rigTarget.transform.parent.parent;
 
     private void OnPlayerSpawned()
     {
-        string shoulderPathPrefix =
-                "Player Objects/Local VRRig/Local Gorilla Player/GorillaPlayerNetworkedRigAnchor/rig/body/shoulder.";
+        Debug.Log("[VRARARARARA] " + VRRig.LocalRig.leftHand.rigTarget.name);
 
-        leftShoulder  = GameObject.Find(shoulderPathPrefix + "L");
-        rightShoulder = GameObject.Find(shoulderPathPrefix + "R");
+        Transform left  = GetShoulderTransform(VRRig.LocalRig, true);
+        Transform right = GetShoulderTransform(VRRig.LocalRig, false);
 
-        NetworkSystem.Instance.OnJoinedRoomEvent        += TurnArmsToLegsIfInModded;
-        NetworkSystem.Instance.OnReturnedToSinglePlayer += TurnArmsToLegs;
-        
-        Vector3 lPos = leftShoulder.transform.localPosition;
-        Vector3 rPos = rightShoulder.transform.localPosition;
+        Vector3 lPos = left.localPosition;
+        Vector3 rPos = right.localPosition;
 
-        lPos.y = legsYPosition;
-        rPos.y = legsYPosition;
+        lPos.y = LegsYPosition;
+        rPos.y = LegsYPosition;
 
-        leftShoulder.transform.localPosition  = lPos;
-        rightShoulder.transform.localPosition = rPos;
-    }
-
-    private void TurnArmsToLegs()
-    {
-        Vector3 lPos = leftShoulder.transform.localPosition;
-        Vector3 rPos = rightShoulder.transform.localPosition;
-
-        lPos.y = legsYPosition;
-        rPos.y = legsYPosition;
-
-        leftShoulder.transform.localPosition  = lPos;
-        rightShoulder.transform.localPosition = rPos;
-    }
-
-    private void TurnArmsToLegsIfInModded()
-    {
-        if (!NetworkSystem.Instance.GameModeString.Contains("MODDED"))
-        {
-            Vector3 lPos = leftShoulder.transform.localPosition;
-            Vector3 rPos = rightShoulder.transform.localPosition;
-
-            lPos.y = defaultYPosition;
-            rPos.y = defaultYPosition;
-
-            leftShoulder.transform.localPosition  = lPos;
-            rightShoulder.transform.localPosition = rPos;
-
-            return;
-        }
-
-        {
-            Vector3 lPos = leftShoulder.transform.localPosition;
-            Vector3 rPos = rightShoulder.transform.localPosition;
-
-            lPos.y = legsYPosition;
-            rPos.y = legsYPosition;
-
-            leftShoulder.transform.localPosition  = lPos;
-            rightShoulder.transform.localPosition = rPos;
-        }
+        left.localPosition  = lPos;
+        right.localPosition = rPos;
     }
 }

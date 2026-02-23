@@ -9,7 +9,7 @@
         <Reference Include="0Harmony">
             <HintPath>$(BepInExAssemblyPath)\0Harmony.dll</HintPath>
         </Reference>
-        <Reference Include="Assembly-CSharp">
+        <Reference Include="Assembly-CSharp" Publicize="True">
             <HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
@@ -39,7 +39,7 @@
         <Reference Include="Photon3Unity3D">
             <HintPath>$(GameAssemblyPath)\Photon3Unity3D.dll</HintPath>
         </Reference>
-        <Reference Include="PhotonRealtime">
+        <Reference Include="PhotonRealtime" Publicize="True">
             <HintPath>$(GameAssemblyPath)\PhotonRealtime.dll</HintPath>
         </Reference>
         <Reference Include="PhotonUnityNetworking">
@@ -285,6 +285,13 @@
         <Reference Include="websocket-sharp">
             <HintPath>$(GameAssemblyPath)\websocket-sharp.dll</HintPath>
         </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.5.0-beta.2">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 </Project>
 
