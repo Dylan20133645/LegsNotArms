@@ -8,7 +8,7 @@ using UnityEngine;
 namespace LegsNotArms;
 
 [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
-public class Plugin : BaseUnityPlugin
+public class Plugin : MonoBehaviour
 {
     private const float DefaultYPosition = 0.3432f;
     private const float LegsYPosition    = 0.0432f;
